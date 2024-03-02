@@ -1,0 +1,110 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id Int @id @map("_id") 
+  email String @unique
+  username String @unique
+  role Role @default(User)
+  name String
+  password String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  order Order[]
+  address Address?
+  cart Cart?
+}
+
+enum Role {
+  User
+  Admin
+}
+
+
+model Address {
+  id      Int      @id @map("_id")
+  userId  Int      @unique
+  user    User     @relation(fields: [userId], references: [id])
+  country String
+  city    String
+  street  String
+  zipCode String
+  Order   Order[]
+  Item    Item[]
+  seller  seller[]
+}
+
+model Order {
+  id            Int         @id @map("_id")
+  userId        Int         @unique
+  user          User        @relation(fields: [userId], references: [id])
+  uuid          String      @unique
+  address       Address     @relation(fields: [addressId], references: [id])
+  status        String      @default("pending")
+  typeOfPayment String      @default("cash")
+  total         Float
+  addressId     Int
+  orderItems    OrderItem[]
+}
+
+model OrderItem {
+  id        Int      @id @map("_id")
+  orderId   Int
+  order     Order    @relation(fields: [orderId], references: [id])
+  itemId    Int
+  item      Item?    @relation(fields: [itemId], references: [id])
+  quantity  Int
+  price     Float
+  orderDate DateTime
+  discount  Float
+  delivery  DateTime
+}
+
+model Item {
+  id          Int      @id @map("_id")
+  name        String
+  description String
+  price       Float
+  image       String[]
+  category    String
+  stock       Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+  sellerId    Int
+  seller      seller   @relation(fields: [sellerId], references: [id])
+  address     Address? @relation(fields: [addressId], references: [id])
+
+  OrderItem OrderItem[]
+  addressId Int?
+}
+
+model seller {
+  id        Int      @id @map("_id")
+  name      String
+  username  String   @unique
+  email     String   @unique
+  password  String
+  sells     Item[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  addressId Int
+  address   Address? @relation(fields: [addressId], references: [id])
+  totalMoney Float
+  totalProducts Int
+  totalOrders Int
+}
+
+model Cart {
+  id     Int  @id @map("_id")
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id])
+}
